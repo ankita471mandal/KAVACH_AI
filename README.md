@@ -11,9 +11,3 @@ Complete backend API system for Kavach AI with:
 - Sample data
 - Full API documentation
 
-## 🚀 Quick Start
-
-### 1. Install Dependencies
-```bash
-pip install -r requirements.txt
-pip install pydantic-settings
