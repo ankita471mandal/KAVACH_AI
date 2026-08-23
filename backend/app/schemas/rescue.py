@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -15,7 +15,8 @@ class RescueReportBase(BaseModel):
     photo_url: Optional[str] = Field(default=None, max_length=500)
     metadata: Optional[Dict[str, Any]] = Field(default=None)
 
-    @validator('report_type')
+    @field_validator('report_type')
+    @classmethod
     def validate_report_type(cls, v):
         allowed = [
             'road_blocked', 
@@ -31,7 +32,8 @@ class RescueReportBase(BaseModel):
             raise ValueError(f'Report type must be one of {allowed}')
         return v
     
-    @validator('severity')
+    @field_validator('severity')
+    @classmethod
     def validate_severity(cls, v):
         allowed = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
         if v not in allowed:
@@ -63,37 +65,3 @@ class RescueReportResponse(RescueReportBase):
 
     class Config:
         from_attributes = True
-
-class RescueReportVerification(BaseModel):
-    """Schema for verifying a rescue report"""
-    verified: bool = Field(..., description="Verification status")
-    verified_by: str = Field(..., max_length=100, description="Name of verifier")
-    verification_notes: Optional[str] = Field(default=None, max_length=500)
-
-class RescueTeamReport(BaseModel):
-    """Comprehensive rescue team report"""
-    team_id: str = Field(..., description="Rescue team identifier")
-    team_name: str
-    current_location_lat: float = Field(..., ge=-90, le=90)
-    current_location_lng: float = Field(..., ge=-180, le=180)
-    status: str = Field(default="AVAILABLE", description="Team status")
-    current_mission: Optional[str] = None
-    people_rescued: int = Field(default=0, ge=0)
-    reports: list[RescueReportCreate] = Field(default_factory=list)
-    
-    @validator('status')
-    def validate_status(cls, v):
-        allowed = ['AVAILABLE', 'EN_ROUTE', 'ON_MISSION', 'RETURNING', 'OFF_DUTY']
-        if v not in allowed:
-            raise ValueError(f'Team status must be one of {allowed}')
-        return v
-
-class RescueAnalytics(BaseModel):
-    """Rescue operation analytics"""
-    total_reports: int
-    verified_reports: int
-    pending_verification: int
-    by_severity: Dict[str, int]
-    by_type: Dict[str, int]
-    total_affected: int
-    active_rescue_teams: int

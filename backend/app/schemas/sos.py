@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 
@@ -12,7 +12,8 @@ class SOSBase(BaseModel):
     description: Optional[str] = Field(default=None, max_length=1000)
     people_count: int = Field(default=1, ge=1, description="Number of people needing help")
 
-    @validator('emergency_type')
+    @field_validator('emergency_type')
+    @classmethod
     def validate_emergency_type(cls, v):
         allowed = [
             'MEDICAL',
@@ -28,7 +29,8 @@ class SOSBase(BaseModel):
             raise ValueError(f'Emergency type must be one of {allowed}')
         return v
     
-    @validator('citizen_phone')
+    @field_validator('citizen_phone')
+    @classmethod
     def validate_phone(cls, v):
         if v and not v.replace('+', '').replace('-', '').replace(' ', '').isdigit():
             raise ValueError('Phone number must contain only digits, +, -, and spaces')
@@ -45,7 +47,8 @@ class SOSUpdate(BaseModel):
     assigned_to: Optional[str] = Field(default=None, max_length=100)
     description: Optional[str] = Field(default=None, max_length=1000)
 
-    @validator('status')
+    @field_validator('status')
+    @classmethod
     def validate_status(cls, v):
         if v is not None:
             allowed = ['PENDING', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'CANCELLED']
@@ -53,7 +56,8 @@ class SOSUpdate(BaseModel):
                 raise ValueError(f'Status must be one of {allowed}')
         return v
     
-    @validator('priority')
+    @field_validator('priority')
+    @classmethod
     def validate_priority(cls, v):
         if v is not None:
             allowed = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
@@ -74,30 +78,3 @@ class SOSResponse(SOSBase):
 
     class Config:
         from_attributes = True
-
-class SOSAssignment(BaseModel):
-    """Schema for assigning SOS to rescue team"""
-    sos_id: int
-    assigned_to: str = Field(..., max_length=100, description="Rescue team/person identifier")
-    estimated_arrival_minutes: Optional[int] = Field(default=None, ge=0)
-    notes: Optional[str] = Field(default=None, max_length=500)
-
-class SOSResolution(BaseModel):
-    """Schema for resolving an SOS request"""
-    sos_id: int
-    resolved_by: str = Field(..., max_length=100)
-    resolution_notes: str = Field(..., max_length=1000)
-    people_helped: int = Field(..., ge=0)
-    additional_resources_needed: bool = Field(default=False)
-
-class SOSDashboard(BaseModel):
-    """SOS Dashboard statistics"""
-    total_sos: int
-    pending: int
-    assigned: int
-    in_progress: int
-    resolved_today: int
-    critical_pending: int
-    by_emergency_type: dict = Field(default_factory=dict)
-    average_response_time_minutes: Optional[float] = None
-    recent_requests: list[SOSResponse] = Field(default_factory=list)

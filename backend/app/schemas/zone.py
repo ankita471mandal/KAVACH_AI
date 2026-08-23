@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -12,12 +12,6 @@ class ZoneBase(BaseModel):
     vulnerable_population: int = Field(default=0, ge=0, description="Vulnerable population count")
     hospital_count: int = Field(default=0, ge=0)
     shelter_count: int = Field(default=0, ge=0)
-
-    @validator('vulnerable_population')
-    def validate_vulnerable_population(cls, v, values):
-        if 'total_population' in values and v > values['total_population']:
-            raise ValueError('Vulnerable population cannot exceed total population')
-        return v
 
 class ZoneCreate(ZoneBase):
     """Schema for creating a new zone"""
@@ -46,41 +40,3 @@ class ZoneResponse(ZoneBase):
 
     class Config:
         from_attributes = True
-
-class ZonePriorityDetail(BaseModel):
-    """Detailed zone priority information"""
-    zone_id: int
-    zone_name: str
-    priority_score: float
-    priority_level: str
-    risk_score: float
-    risk_level: str
-    reasons: list[str] = Field(default_factory=list)
-    recommended_action: str
-    total_population: int
-    vulnerable_population: int
-    shelter_capacity_status: str
-    hospital_accessibility: str
-    evacuation_required: bool
-    estimated_evacuees: int
-
-class ZoneRiskFactors(BaseModel):
-    """Zone risk factor breakdown"""
-    zone_id: int
-    zone_name: str
-    flood_exposure: float
-    vulnerable_households: int
-    hospital_accessibility_score: float
-    main_road_status: str
-    shelter_capacity_ratio: float
-    risk_trend: str
-    overall_risk: float
-
-class ZonePriorityList(BaseModel):
-    """List of priority zones"""
-    priority_zones: list[ZonePriorityDetail] = Field(default_factory=list)
-    total_zones: int
-    critical_zones: int
-    high_priority_zones: int
-    total_affected_population: int
-    last_updated: datetime
