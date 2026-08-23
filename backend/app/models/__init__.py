@@ -1,3 +1,4 @@
+from .base import Base, BaseModel
 from .user import User
 from .household import Household
 from .hazard import Hazard
@@ -9,6 +10,8 @@ from .sos_request import SOSRequest
 from .zone import Zone
 
 __all__ = [
+    "Base",
+    "BaseModel",
     "User",
     "Household",
     "Hazard",
