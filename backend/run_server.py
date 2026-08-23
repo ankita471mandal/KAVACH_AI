@@ -17,8 +17,8 @@ if __name__ == "__main__":
     print("\nPress CTRL+C to stop\n")
     
     uvicorn.run(
-        app, 
-        host="0.0.0.0", 
-        port=8000, 
-        reload=True
-    )
+    app, 
+    host="0.0.0.0", 
+    port=8001,  # Changed from 8000
+    reload=True
+)
