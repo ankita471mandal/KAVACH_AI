@@ -14,7 +14,7 @@ def submit_rescue_report(
     db: Session = Depends(get_db)
 ):
     """Submit rescue team report - TRIGGERS SYSTEM RECALCULATION"""
-    db_report = RescueReport(**report.dict())
+    db_report = RescueReport(**report.model_dump())
     db.add(db_report)
     db.commit()
     db.refresh(db_report)
@@ -29,9 +29,8 @@ def trigger_road_update(report: RescueReportCreate, db: Session):
     """Update road status when blocked"""
     from app.models.road import Road
     
-    # Find nearby road
-    # Simplified: In production, use geospatial query
-    road = db.query(Road).first()  # Replace with actual logic
+    # Find nearby road (simplified for now)
+    road = db.query(Road).first()
     
     if road:
         road.status = "BLOCKED"
@@ -39,7 +38,6 @@ def trigger_road_update(report: RescueReportCreate, db: Session):
         road.verified = True
         db.commit()
         
-        # Trigger route recalculation (handled by Member 5)
         print(f"⚠️  Road {road.name} marked as BLOCKED - Routes need recalculation")
 
 @router.get("/reports", response_model=List[RescueReportResponse])

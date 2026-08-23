@@ -13,7 +13,7 @@ def create_sos(
     db: Session = Depends(get_db)
 ):
     """Create SOS request"""
-    db_sos = SOSRequest(**sos.dict())
+    db_sos = SOSRequest(**sos.model_dump())
     
     # Auto-prioritize based on emergency type
     if sos.emergency_type == "MEDICAL":
@@ -22,6 +22,8 @@ def create_sos(
         db_sos.priority = "HIGH"
     else:
         db_sos.priority = "MEDIUM"
+    
+    db_sos.status = "PENDING"
     
     db.add(db_sos)
     db.commit()

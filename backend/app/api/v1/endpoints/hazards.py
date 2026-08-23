@@ -23,7 +23,7 @@ def create_hazard(
     db: Session = Depends(get_db)
 ):
     """Create new hazard entry"""
-    db_hazard = Hazard(**hazard.dict())
+    db_hazard = Hazard(**hazard.model_dump())
     
     # Calculate risk score
     risk_score = calculate_risk_score(db_hazard)

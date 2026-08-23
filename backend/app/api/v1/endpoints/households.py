@@ -67,7 +67,7 @@ def create_household(
     db: Session = Depends(get_db)
 ):
     """Create new household"""
-    db_household = Household(**household.dict())
+    db_household = Household(**household.model_dump())
     
     # Calculate vulnerability
     vulnerability = calculate_vulnerability(db_household)

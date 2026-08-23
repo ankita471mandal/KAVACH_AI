@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
@@ -41,19 +41,21 @@ def get_shelter_capacity(
     if not shelter:
         raise HTTPException(status_code=404, detail="Shelter not found")
     
+    safe_capacity = min(
+        shelter.water_capacity,
+        shelter.food_capacity,
+        shelter.sanitation_capacity,
+        shelter.medical_capacity,
+        shelter.total_capacity
+    )
+    
     return {
         "shelter_id": shelter.id,
         "name": shelter.name,
         "total_capacity": shelter.total_capacity,
         "current_occupancy": shelter.current_occupancy,
-        "safe_capacity": min(
-            shelter.water_capacity,
-            shelter.food_capacity,
-            shelter.sanitation_capacity,
-            shelter.medical_capacity,
-            shelter.total_capacity
-        ),
-        "available_capacity": shelter.available_capacity,
+        "safe_capacity": safe_capacity,
+        "available_capacity": max(safe_capacity - shelter.current_occupancy, 0),
         "capacity_breakdown": {
             "water": shelter.water_capacity,
             "food": shelter.food_capacity,
