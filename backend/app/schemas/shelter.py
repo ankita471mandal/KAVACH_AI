@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 
@@ -17,12 +17,6 @@ class ShelterBase(BaseModel):
     flood_risk: float = Field(default=0.0, ge=0, le=100, description="Flood risk score")
     manager_name: Optional[str] = Field(default=None, max_length=100)
     contact_number: Optional[str] = Field(default=None, max_length=20)
-
-    @validator('current_occupancy')
-    def validate_occupancy(cls, v, values):
-        if 'total_capacity' in values and v > values['total_capacity']:
-            raise ValueError('Current occupancy cannot exceed total capacity')
-        return v
 
 class ShelterCreate(ShelterBase):
     """Schema for creating a new shelter"""
@@ -54,37 +48,3 @@ class ShelterResponse(ShelterBase):
 
     class Config:
         from_attributes = True
-
-class ShelterCapacityDetail(BaseModel):
-    """Detailed shelter capacity breakdown"""
-    shelter_id: int
-    name: str
-    location: dict = Field(default_factory=dict, description="Location coordinates")
-    total_capacity: int
-    current_occupancy: int
-    safe_capacity: int
-    available_capacity: int
-    capacity_breakdown: dict = Field(default_factory=dict, description="Detailed capacity by resource")
-    occupancy_percent: float
-    is_accepting: bool
-    flood_risk: float
-    status: str
-    limiting_factor: Optional[str] = Field(default=None, description="Which resource is limiting capacity")
-
-class ShelterAllocation(BaseModel):
-    """Shelter allocation recommendation"""
-    shelter_id: int
-    shelter_name: str
-    allocated_count: int
-    priority: int
-    distance_km: Optional[float] = None
-    route_safety_score: Optional[float] = None
-
-class ShelterReallocationPlan(BaseModel):
-    """Shelter reallocation plan for overflow"""
-    required_capacity: int
-    primary_shelter: Optional[ShelterAllocation] = None
-    overflow_shelters: list[ShelterAllocation] = Field(default_factory=list)
-    total_allocated: int
-    unallocated: int
-    has_deficit: bool

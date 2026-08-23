@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -13,14 +13,16 @@ class RoadBase(BaseModel):
     last_updated_by: Optional[str] = Field(default=None, max_length=100)
     verified: bool = Field(default=False, description="Is the road status verified")
 
-    @validator('status')
+    @field_validator('status')
+    @classmethod
     def validate_status(cls, v):
         allowed = ['OPEN', 'BLOCKED', 'DAMAGED', 'FLOODED', 'UNDER_REPAIR']
         if v not in allowed:
             raise ValueError(f'Road status must be one of {allowed}')
         return v
     
-    @validator('road_type')
+    @field_validator('road_type')
+    @classmethod
     def validate_road_type(cls, v):
         allowed = ['primary', 'secondary', 'tertiary', 'residential']
         if v not in allowed:
@@ -50,30 +52,3 @@ class RoadResponse(RoadBase):
 
     class Config:
         from_attributes = True
-
-class RoadStatusUpdate(BaseModel):
-    """Quick road status update schema"""
-    status: str = Field(..., description="New road status")
-    updated_by: str = Field(..., description="Person/team updating the status")
-    reason: Optional[str] = Field(default=None, description="Reason for status change")
-    flood_depth_cm: Optional[float] = Field(default=None, ge=0, description="Flood depth in cm if flooded")
-    
-    @validator('status')
-    def validate_status(cls, v):
-        allowed = ['OPEN', 'BLOCKED', 'DAMAGED', 'FLOODED', 'UNDER_REPAIR']
-        if v not in allowed:
-            raise ValueError(f'Road status must be one of {allowed}')
-        return v
-
-class RoadConditionReport(BaseModel):
-    """Detailed road condition report"""
-    road_id: int
-    road_name: str
-    status: str
-    is_passable: bool
-    flood_risk: float
-    accessibility_score: float
-    last_verified: Optional[datetime] = None
-    verified_by: Optional[str] = None
-    alternative_routes_available: bool
-    estimated_repair_time_hours: Optional[int] = None
