@@ -4,6 +4,7 @@ from typing import List
 from app.db.session import get_db
 from app.models.hazard import Hazard
 from app.schemas.hazard import HazardResponse, HazardCreate
+from app.services.ml_service import MLService  # Import ML service
 
 router = APIRouter()
 
@@ -22,11 +23,11 @@ def create_hazard(
     hazard: HazardCreate,
     db: Session = Depends(get_db)
 ):
-    """Create new hazard entry"""
+    """Create new hazard entry with ML-based risk calculation"""
     db_hazard = Hazard(**hazard.model_dump())
     
-    # Calculate risk score
-    risk_score = calculate_risk_score(db_hazard)
+    # Use ML Service for risk calculation
+    risk_score = MLService.calculate_hazard_risk(hazard.model_dump())
     db_hazard.risk_score = risk_score
     db_hazard.risk_level = get_risk_level(risk_score)
     
@@ -34,18 +35,6 @@ def create_hazard(
     db.commit()
     db.refresh(db_hazard)
     return db_hazard
-
-def calculate_risk_score(hazard: Hazard) -> float:
-    """Calculate risk score based on multiple factors"""
-    score = (
-        0.25 * min(hazard.rainfall / 100, 1.0) * 100 +
-        0.25 * min(hazard.river_level / 10, 1.0) * 100 +
-        0.15 * (100 - min(hazard.elevation or 0, 100)) +
-        0.15 * hazard.historical_risk +
-        0.10 * (100 - hazard.drainage_quality) +
-        0.10 * (20 if hazard.forecast_trend == "increasing" else 0)
-    )
-    return min(score, 100.0)
 
 def get_risk_level(score: float) -> str:
     """Convert risk score to level"""
@@ -57,3 +46,14 @@ def get_risk_level(score: float) -> str:
         return "yellow"
     else:
         return "green"
+
+@router.post("/ml-predict")
+def predict_risk_ml(hazard_data: HazardCreate):
+    """Direct ML prediction endpoint for testing"""
+    risk_score = MLService.calculate_hazard_risk(hazard_data.model_dump())
+    return {
+        "risk_score": risk_score,
+        "risk_level": get_risk_level(risk_score),
+        "using_ml_model": True,
+        "input_data": hazard_data.model_dump()
+    }
