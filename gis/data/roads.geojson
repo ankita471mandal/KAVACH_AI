@@ -1,0 +1,38 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "road_id": "R1",
+        "name": "Main Rescue Road",
+        "status": "OPEN"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [88.3500, 22.5650],
+          [88.3600, 22.5700],
+          [88.3700, 22.5750],
+          [88.3800, 22.5800]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "road_id": "R2",
+        "name": "Flooded Road",
+        "status": "BLOCKED"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [88.3550, 22.5850],
+          [88.3650, 22.5800],
+          [88.3750, 22.5750]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "household_id": "HH101",
+        "members": 5,
+        "vulnerable_members": 2,
+        "status": "AT_RISK"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3630, 22.5740]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "household_id": "HH102",
+        "members": 4,
+        "vulnerable_members": 1,
+        "status": "SAFE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3700, 22.5820]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "household_id": "HH103",
+        "members": 6,
+        "vulnerable_members": 3,
+        "status": "AT_RISK"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3720, 22.5740]
+      }
+    }
+  ]
+}

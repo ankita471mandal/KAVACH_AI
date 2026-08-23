@@ -1,0 +1,28 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "zone_id": "Z17",
+        "risk_score": 87,
+        "risk_level": "CRITICAL",
+        "population": 426,
+        "vulnerable_households": 38,
+        "updated_at": "2026-08-23T10:30:00"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [88.360, 22.570],
+            [88.375, 22.570],
+            [88.375, 22.585],
+            [88.360, 22.585],
+            [88.360, 22.570]
+          ]
+        ]
+      }
+    }
+  ]
+}

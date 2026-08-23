@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "shelter_id": "S1",
+        "name": "KAVACH Central Shelter",
+        "capacity": 500,
+        "occupancy": 280,
+        "available": 220,
+        "status": "OPEN"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3565, 22.5795]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "shelter_id": "S2",
+        "name": "KAVACH Safe Shelter",
+        "capacity": 300,
+        "occupancy": 120,
+        "available": 180,
+        "status": "OPEN"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3775, 22.5655]
+      }
+    }
+  ]
+}

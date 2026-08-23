@@ -1,0 +1,31 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "sos_id": "SOS01",
+        "severity": "HIGH",
+        "message": "Family trapped in flooded area",
+        "status": "ACTIVE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3660, 22.5780]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "sos_id": "SOS02",
+        "severity": "MEDIUM",
+        "message": "Medical assistance required",
+        "status": "ACTIVE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3740, 22.5720]
+      }
+    }
+  ]
+}
