@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shelter & Capacity Intelligence | Disaster Management System</title>
+
+<!-- Leaflet Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Chart.js for analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  /* ============ RESET & BASE ============ */
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-hover: #334155;
+    --accent: #38bdf8;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --orange: #f97316;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --border: #334155;
+  }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ============ HEADER ============ */
+  .header {
+    background: linear-gradient(135deg, #1e3a5f, #0f172a);
+    border-bottom: 2px solid var(--accent);
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h1 { font-size: 1.5rem; }
+  .header h1 span { color: var(--accent); }
+  .header .status-badge {
+    background: var(--green);
+    color: #000;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; }
+    50% { opacity:0.6; }
+  }
+
+  /* ============ STATS ROW ============ */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    padding: 24px 32px;
+  }
+  .stat-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid var(--accent);
+    transition: transform 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-3px); }
+  .stat-card.green { border-left-color: var(--green); }
+  .stat-card.yellow { border-left-color: var(--yellow); }
+  .stat-card.red { border-left-color: var(--red); }
+  .stat-card.orange { border-left-color: var(--orange); }
+  .stat-card .label { color: var(--muted); font-size: 0.85rem; margin-bottom: 4px; }
+  .stat-card .value { font-size: 2rem; font-weight: 800; }
+  .stat-card .sub { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+
+  /* ============ MAIN GRID ============ */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 0 32px 32px;
+  }
+  @media(max-width:900px) { .main-grid { grid-template-columns:1fr; } }
+
+  .panel {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--border);
+  }
+  .panel h2 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel h2 .icon { font-size: 1.3rem; }
+
+  /* ============ MAP ============ */
+  #shelterMap {
+    height: 350px;
+    border-radius: 8px;
+    z-index: 1;
+  }
+
+  /* ============ SHELTER TABLE ============ */
+  .shelter-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .shelter-table th {
+    text-align: left;
+    color: var(--muted);
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .shelter-table td {
+    padding: 10px 6px;
+    border-bottom: 1px solid #1a2332;
+  }
+  .shelter-table tr:hover td { background: var(--card-hover); }
+
+  /* Capacity bar */
+  .cap-bar-bg {
+    background: #0f172a;
+    border-radius: 6px;
+    height: 18px;
+    width: 100%;
+    min-width: 80px;
+    overflow: hidden;
+    position: relative;
+  }
+  .cap-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.8s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #000;
+  }
+  .cap-low { background: var(--green); }
+  .cap-med { background: var(--yellow); }
+  .cap-high { background: var(--orange); }
+  .cap-full { background: var(--red); color: #fff; }
+
+  .badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .badge-open { background: #166534; color: #86efac; }
+  .badge-full { background: #7f1d1d; color: #fca5a5; }
+  .badge-critical { background: #78350f; color: #fcd34d; }
+
+  /* ============ SMART ALLOCATOR ============ */
+  .alloc-form { display: flex; flex-direction: column; gap: 12px; }
+  .alloc-form label { color: var(--muted); font-size: 0.85rem; }
+  .alloc-form input, .alloc-form select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  .alloc-form input:focus, .alloc-form select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: #7dd3fc; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: #f87171; }
+
+  .alloc-result {
+    margin-top: 12px;
+    padding: 14px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--green);
+    display: none;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .alloc-result strong { color: var(--green); }
+
+  /* ============ RESOURCE PANEL ============ */
+  .resource-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .resource-item {
+    background: var(--bg);
+    padding: 14px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .resource-item .r-icon { font-size: 1.8rem; }
+  .resource-item .r-label { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+  .resource-item .r-value { font-size: 1.3rem; font-weight: 700; }
+  .resource-item .r-status { font-size: 0.75rem; margin-top: 2px; }
+  .r-ok { color: var(--green); }
+  .r-warn { color: var(--yellow); }
+  .r-crit { color: var(--red); }
+
+  /* ============ ALERTS ============ */
+  .alert-feed { max-height: 220px; overflow-y: auto; }
+  .alert-item {
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .alert-critical { background: #450a0a; border-left: 3px solid var(--red); }
+  .alert-warning { background: #422006; border-left: 3px solid var(--yellow); }
+  .alert-info { background: #0c1a2e; border-left: 3px solid var(--accent); }
+  .alert-time { color: var(--muted); font-size: 0.75rem; white-space: nowrap; }
+
+  /* ============ CHART ============ */
+  .chart-container { position: relative; height: 250px; }
+
+  /* ============ FULL WIDTH ============ */
+  .full-width { grid-column: 1 / -1; }
+
+  /* ============ SCROLLBAR ============ */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ==================== HEADER ==================== -->
+<div class="header">
+  <h1>🏠 Shelter & <span>Capacity Intelligence</span></h1>
+  <div class="status-badge">● LIVE MONITORING</div>
+</div>
+
+<!-- ==================== STATS ROW ==================== -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="label">Total Shelters</div>
+    <div class="value" id="totalShelters">0</div>
+    <div class="sub">Active in the region</div>
+  </div>
+  <div class="stat-card green">
+    <div class="label">Available Capacity</div>
+    <div class="value" id="totalAvailable">0</div>
+    <div class="sub">Beds remaining</div>
+  </div>
+  <div class="stat-card yellow">
+    <div class="label">People Sheltered</div>
+    <div class="value" id="totalOccupied">0</div>
+    <div class="sub">Currently housed</div>
+  </div>
+  <div class="stat-card red">
+    <div class="label">Critical Shelters</div>
+    <div class="value" id="criticalCount">0</div>
+    <div class="sub">Above 90% capacity</div>
+  </div>
+  <div class="stat-card orange">
+    <div class="label">Avg Occupancy</div>
+    <div class="value" id="avgOccupancy">0%</div>
+    <div class="sub">Across all shelters</div>
+  </div>
+</div>
+
+<!-- ==================== MAIN GRID ==================== -->
+<div class="main-grid">
+
+  <!-- MAP PANEL -->
+  <div class="panel">
+    <h2><span class="icon">📍</span> Shelter Locations Map</h2>
+    <div id="shelterMap"></div>
+  </div>
+
+  <!-- SMART ALLOCATOR -->
+  <div class="panel">
+    <h2><span class="icon">🧠</span> Smart Shelter Allocator</h2>
+    <div class="alloc-form">
+      <div>
+        <label>Evacuee Location (lat, lng)</label>
+        <input type="text" id="evacLat" placeholder="e.g. 28.6139" />
+        <input type="text" id="evacLng" placeholder="e.g. 77.2090" style="margin-top:6px"/>
+      </div>
+      <div>
+        <label>Number of People</label>
+        <input type="number" id="evacCount" placeholder="e.g. 15" min="1" />
+      </div>
+      <div>
+        <label>Special Needs</label>
+        <select id="evacNeeds">
+          <option value="none">None</option>
+          <option value="medical">Medical Aid</option>
+          <option value="child">Child-Friendly</option>
+          <option value="pet">Pet-Friendly</option>
+          <option value="wheelchair">Wheelchair Access</option>
+        </select>
+      </div>
+      <button class="btn" onclick="allocateShelter()">🔍 Find Best Shelter</button>
+    </div>
+    <div class="alloc-result" id="allocResult"></div>
+  </div>
+
+  <!-- SHELTER TABLE -->
+  <div class="panel full-width">
+    <h2><span class="icon">📊</span> Real-Time Shelter Capacity Dashboard</h2>
+    <div style="overflow-x:auto;">
+      <table class="shelter-table">
+        <thead>
+          <tr>
+            <th>Shelter Name</th>
+            <th>Type</th>
+            <th>Location</th>
+            <th>Capacity</th>
+            <th>Occupancy</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="shelterTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RESOURCE INTELLIGENCE -->
+  <div class="panel">
+    <h2><span class="icon">📦</span> Resource Intelligence (All Shelters)</h2>
+    <div class="resource-grid" id="resourceGrid"></div>
+  </div>
+
+  <!-- LIVE ALERTS -->
+  <div class="panel">
+    <h2><span class="icon">🚨</span> Capacity Alerts Feed</h2>
+    <div class="alert-feed" id="alertFeed"></div>
+  </div>
+
+  <!-- CHART -->
+  <div class="panel full-width">
+    <h2><span class="icon">📈</span> Capacity Forecast (Next 12 Hours)</h2>
+    <div class="chart-container">
+      <canvas id="capacityChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+// =====================================================
+//  SHELTER DATA (Replace with your backend/API later)
+// =====================================================
+const shelters = [
+  {
+    id: 1, name: "Delhi Public School Hall",
+    type: "School", lat: 28.6139, lng: 77.2090,
+    maxCap: 500, occupied: 342,
+    amenities: ["medical","child","wheelchair"],
+    resources: { food: 78, water: 65, beds: 45, medical: 30 }
+  },
+  {
+    id: 2, name: "Indira Gandhi Stadium",
+    type: "Stadium", lat: 28.5921, lng: 77.2350,
+    maxCap: 2000, occupied: 1870,
+    amenities: ["medical","child","pet","wheelchair"],
+    resources: { food: 22, water: 18, beds: 12, medical: 8 }
+  },
+  {
+    id: 3, name: "Community Center Saket",
+    type: "Community", lat: 28.5244, lng: 77.2066,
+    maxCap: 200, occupied: 45,
+    amenities: ["child"],
+    resources: { food: 90, water: 85, beds: 80, medical: 70 }
+  },
+  {
+    id: 4, name: "Red Cross Relief Camp",
+    type: "Relief Camp", lat: 28.6353, lng: 77.2250,
+    maxCap: 800, occupied: 760,
+    amenities: ["medical","wheelchair"],
+    resources: { food: 15, water: 10, beds: 5, medical: 20 }
+  },
+  {
+    id: 5, name: "JNU Campus Shelter",
+    type: "University", lat: 28.5400, lng: 77.1700,
+    maxCap: 1200, occupied: 430,
+    amenities: ["medical","child","pet","wheelchair"],
+    resources: { food: 60, water: 55, beds: 50, medical: 45 }
+  },
+  {
+    id: 6, name: "Dwarka Sector 10 Gurudwara",
+    type: "Religious", lat: 28.5857, lng: 77.0375,
+    maxCap: 350, occupied: 340,
+    amenities: ["medical","child"],
+    resources: { food: 8, water: 5, beds: 3, medical: 12 }
+  }
+];
+
+// =====================================================
+//  UTILITY FUNCTIONS
+// =====================================================
+function getPercent(s) { return Math.round((s.occupied / s.maxCap) * 100); }
+
+function getCapClass(pct) {
+  if (pct >= 95) return "cap-full";
+  if (pct >= 75) return "cap-high";
+  if (pct >= 50) return "cap-med";
+  return "cap-low";
+}
+
+function getStatusBadge(pct) {
+  if (pct >= 95) return `<span class="badge badge-full">FULL</span>`;
+  if (pct >= 75) return `<span class="badge badge-critical">CRITICAL</span>`;
+  return `<span class="badge badge-open">OPEN</span>`;
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+            Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// =====================================================
+//  1. UPDATE STATS CARDS
+// =====================================================
+function updateStats() {
+  const total = shelters.length;
+  const totalMax = shelters.reduce((s, sh) => s + sh.maxCap, 0);
+  const totalOcc = shelters.reduce((s, sh) => s + sh.occupied, 0);
+  const critical = shelters.filter(s => getPercent(s) >= 90).length;
+  const avg = Math.round((totalOcc / totalMax) * 100);
+
+  document.getElementById("totalShelters").textContent = total;
+  document.getElementById("totalAvailable").textContent =
+    (totalMax - totalOcc).toLocaleString();
+  document.getElementById("totalOccupied").textContent =
+    totalOcc.toLocaleString();
+  document.getElementById("criticalCount").textContent = critical;
+  document.getElementById("avgOccupancy").textContent = avg + "%";
+}
+
+// =====================================================
+//  2. RENDER SHELTER TABLE
+// =====================================================
+function renderTable() {
+  const tbody = document.getElementById("shelterTableBody");
+  tbody.innerHTML = "";
+  shelters.forEach(s => {
+    const pct = getPercent(s);
+    const cls = getCapClass(pct);
+    const remaining = s.maxCap - s.occupied;
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${s.name}</strong></td>
+        <td>${s.type}</td>
+        <td>${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</td>
+        <td>${s.occupied} / ${s.maxCap}</td>
+        <td>
+          <div class="cap-bar-bg">
+            <div class="cap-bar-fill ${cls}" style="width:${pct}%">
+              ${pct}%
+            </div>
+          </div>
+        </td>
+        <td>${getStatusBadge(pct)}</td>
+        <td>
+          <button class="btn" style="padding:5px 10px;font-size:0.75rem"
+            onclick="addPeople(${s.id}, 10)">+10</button>
+          <button class="btn btn-danger" style="padding:5px 10px;font-size:0.75rem"
+            onclick="removePeople(${s.id}, 10)">-10</button>
+        </td>
+      </tr>`;
+  });
+}
+
+// =====================================================
+//  3. MAP
+// =====================================================
+let map;
+function initMap() {
+  map = L.map("shelterMap").setView([28.6139, 77.2090], 12);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap"
+  }).addTo(map);
+
+  shelters.forEach(s => {
+    const pct = getPercent(s);
+    let color = pct >= 90 ? "red" : pct >= 70 ? "orange" : "green";
+    const marker = L.circleMarker([s.lat, s.lng], {
+      radius: 12, fillColor: color, color: "#fff",
+      weight: 2, fillOpacity: 0.85
+    }).addTo(map);
+    marker.bindPopup(`
+      <strong>${s.name}</strong><br>
+      Type: ${s.type}<br>
+      Capacity: ${s.occupied}/${s.maxCap} (${pct}%)<br>
+      Remaining: ${s.maxCap - s.occupied}
+    `);
+  });
+}
+
+// =====================================================
+//  4. SMART SHELTER ALLOCATOR
+// =====================================================
+function allocateShelter() {
+  const lat = parseFloat(document.getElementById("evacLat").value);
+  const lng = parseFloat(document.getElementById("evacLng").value);
+  const count = parseInt(document.getElementById("evacCount").value);
+  const needs = document.getElementById("evacNeeds").value;
+
+  if (isNaN(lat) || isNaN(lng) || isNaN(count)) {
+    alert("Please fill all fields correctly.");
+    return;
+  }
+
+  // Filter shelters that have capacity & match needs
+  let candidates = shelters.filter(s => {
+    const remaining = s.maxCap - s.occupied;
+    if (remaining < count) return false;
+    if (needs !== "none" && !s.amenities.includes(needs)) return false;
+    return true;
+  });
+
+  if (candidates.length === 0) {
+    const res = document.getElementById("allocResult");
+    res.style.display = "block";
+    res.style.borderColor = "var(--red)";
+    res.innerHTML = `⚠️ <strong style="color:var(--red)">No shelters available</strong>
+      matching your criteria. Consider splitting the group or
+      expanding the search radius.`;
+    return;
+  }
+
+  // Sort by distance
+  candidates.sort((a, b) =>
+    haversine(lat, lng, a.lat, a.lng) - haversine(lat, lng, b.lat, b.lng)
+  );
+
+  const best = candidates[0];
+  const dist = haversine(lat, lng, best.lat, best.lng).toFixed(2);
+  const remaining = best.maxCap - best.occupied - count;
+
+  const res = document.getElementById("allocResult");
+  res.style.display = "block";
+  res.style.borderColor = "var(--green)";
+  res.innerHTML = `
+    ✅ <strong>Best Match: ${best.name}</strong><br>
+    📏 Distance: <strong>${dist} km</strong><br>
+    🏠 Type: ${best.type}<br>
+    👥 After allocation: ${best.occupied + count}/${best.maxCap}
+    (${getPercent({...best, occupied: best.occupied + count})}%)<br>
+    🛏️ Remaining beds after: <strong>${remaining}</strong><br>
+    🧰 Amenities: ${best.amenities.join(", ")}
+  `;
+
+  // Highlight on map
+  L.circleMarker([best.lat, best.lng], {
+    radius: 20, fillColor: "cyan", color: "#fff",
+    weight: 3, fillOpacity: 0.4
+  }).addTo(map).bindPopup("🎯 Recommended Shelter").openPopup();
+}
+
+// =====================================================
+//  5. RESOURCE INTELLIGENCE
+// =====================================================
+function renderResources() {
+  const totals = { food:0, water:0, beds:0, medical:0 };
+  shelters.forEach(s => {
+    totals.food += s.resources.food;
+    totals.water += s.resources.water;
+    totals.beds += s.resources.beds;
+    totals.medical += s.resources.medical;
+  });
+  const avg = k => Math.round(totals[k] / shelters.length);
+
+  const items = [
+    { icon:"🍚", label:"Food Supply", val: avg("food"), unit:"%" },
+    { icon:"💧", label:"Water Supply", val: avg("water"), unit:"%" },
+    { icon:"🛏️", label:"Bed Availability", val: avg("beds"), unit:"%" },
+    { icon:"🏥", label:"Medical Kits", val: avg("medical"), unit:"%" }
+  ];
+
+  const grid = document.getElementById("resourceGrid");
+  grid.innerHTML = items.map(i => {
+    const cls = i.val > 50 ? "r-ok" : i.val > 20 ? "r-warn" : "r-crit";
+    const status = i.val > 50 ? "Adequate" : i.val > 20 ? "Low" : "CRITICAL";
+    return `
+      <div class="resource-item">
+        <div class="r-icon">${i.icon}</div>
+        <div class="r-value">${i.val}${i.unit}</div>
+        <div class="r-label">${i.label}</div>
+        <div class="r-status ${cls}">● ${status}</div>
+      </div>`;
+  }).join("");
+}
+
+// =====================================================
+//  6. LIVE ALERTS
+// =====================================================
+function generateAlerts() {
+  const feed = document.getElementById("alertFeed");
+  feed.innerHTML = "";
+  const alerts = [];
+
+  shelters.forEach(s => {
+    const pct = getPercent(s);
+    if (pct >= 95)
+      alerts.push({ type:"critical",
+        msg:`🔴 ${s.name} is at ${pct}% — IMMEDIATE overflow risk!` });
+    else if (pct >= 75)
+      alerts.push({ type:"warning",
+        msg:`🟡 ${s.name} at ${pct}% — nearing capacity.` });
+
+    if (s.resources.food < 15)
+      alerts.push({ type:"critical",
+        msg:`🔴 ${s.name} food supply CRITICAL (${s.resources.food}%).` });
+    if (s.resources.medical < 15)
+      alerts.push({ type:"warning",
+        msg:`🟡 ${s.name} medical kits running low (${s.resources.medical}%).` });
+  });
+
+  alerts.push({ type:"info",
+    msg:`ℹ️ System monitoring ${shelters.length} shelters in real-time.` });
+
+  const now = new Date();
+  alerts.forEach((a, i) => {
+    const t = new Date(now - i * 120000);
+    const time = t.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+    feed.innerHTML += `
+      <div class="alert-item alert-${a.type}">
+        <span class="alert-time">${time}</span>
+        <span>${a.msg}</span>
+      </div>`;
+  });
+}
+
+// =====================================================
+//  7. CAPACITY FORECAST CHART
+// =====================================================
+function renderChart() {
+  const ctx = document.getElementById("capacityChart").getContext("2d");
+  const labels = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const h = new Date(now.getTime() + i * 3600000);
+    labels.push(h.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }));
+  }
+
+  // Simulate forecast data
+  const totalMax = shelters.reduce((s, sh) => s + sh.maxCap, 0);
+  const currentOcc = shelters.reduce((s, sh) => s + sh.occupied, 0);
+  const forecast = [];
+  const capacityLine = [];
+  for (let i = 0; i < 12; i++) {
+    const growth = currentOcc + Math.round(i * (totalMax * 0.012));
+    forecast.push(Math.min(growth, totalMax));
+    capacityLine.push(totalMax);
+  }
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Projected Occupancy",
+          data: forecast,
+          borderColor: "#f97316",
+          backgroundColor: "rgba(249,115,22,0.1)",
+          fill: true, tension: 0.4, pointRadius: 4
+        },
+        {
+          label: "Total Capacity",
+          data: capacityLine,
+          borderColor: "#ef4444",
+          borderDash: [8, 4],
+          pointRadius: 0, fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: "#94a3b8" } }
+      },
+      scales: {
+        x: { ticks: { color: "#64748b" }, grid: { color: "#1e293b" } },
+        y: { ticks: { color: "#64748b" }, grid: { color: "#1e293b" } }
+      }
+    }
+  });
+}
+
+// =====================================================
+//  8. SIMULATE LIVE UPDATES (+/- buttons)
+// =====================================================
+function addPeople(id, n) {
+  const s = shelters.find(sh => sh.id === id);
+  if (s.occupied + n <= s.maxCap) {
+    s.occupied += n;
+    s.resources.food = Math.max(0, s.resources.food - 2);
+    s.resources.water = Math.max(0, s.resources.water - 2);
+    refreshAll();
+  } else {
+    alert("⚠️ Shelter is at full capacity!");
+  }
+}
+
+function removePeople(id, n) {
+  const s = shelters.find(sh => sh.id === id);
+  s.occupied = Math.max(0, s.occupied - n);
+  refreshAll();
+}
+
+function refreshAll() {
+  updateStats();
+  renderTable();
+  renderResources();
+  generateAlerts();
+}
+
+// =====================================================
+//  9. SIMULATE REAL-TIME (every 10 seconds)
+// =====================================================
+function simulateRealTime() {
+  shelters.forEach(s => {
+    const change = Math.floor(Math.random() * 7) - 2; // -2 to +4
+    s.occupied = Math.max(0, Math.min(s.maxCap, s.occupied + change));
+    s.resources.food = Math.max(0, s.resources.food - Math.random());
+    s.resources.water = Math.max(0, s.resources.water - Math.random());
+  });
+  refreshAll();
+}
+
+// =====================================================
+//  INIT
+// =====================================================
+window.addEventListener("DOMContentLoaded", () => {
+  updateStats();
+  renderTable();
+  initMap();
+  renderResources();
+  generateAlerts();
+  renderChart();
+
+  // Simulate live data every 10 seconds
+  setInterval(simulateRealTime, 10000);
+});
+</script>
+</body>
+</html>
