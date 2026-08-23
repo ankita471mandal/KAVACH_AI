@@ -1,0 +1,37 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "hospital_id": "H1",
+        "name": "KAVACH General Hospital",
+        "emergency": true,
+        "beds_available": 65,
+        "icu_available": 8,
+        "ambulances": 2,
+        "status": "OPEN"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3685, 22.5780]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "hospital_id": "H2",
+        "name": "KAVACH Medical Centre",
+        "emergency": true,
+        "beds_available": 32,
+        "icu_available": 4,
+        "ambulances": 1,
+        "status": "OPEN"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3820, 22.5680]
+      }
+    }
+  ]
+}
