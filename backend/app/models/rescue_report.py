@@ -26,6 +26,8 @@ class RescueReport(BaseModel):
     verified_by = Column(String, nullable=True)
     verified_at = Column(DateTime, nullable=True)
     
-    # Metadata
+    # Media
     photo_url = Column(String, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    
+    # RENAMED from 'metadata' to 'extra_data'
+    extra_data = Column(JSON, nullable=True)

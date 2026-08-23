@@ -13,7 +13,7 @@ class RescueReportBase(BaseModel):
     description: Optional[str] = Field(default=None, max_length=1000)
     affected_count: int = Field(default=0, ge=0, description="Number of people affected")
     photo_url: Optional[str] = Field(default=None, max_length=500)
-    metadata: Optional[Dict[str, Any]] = Field(default=None)
+    extra_data: Optional[Dict[str, Any]] = Field(default=None)  # RENAMED from metadata
 
     @field_validator('report_type')
     @classmethod

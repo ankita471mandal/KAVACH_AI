@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 class HouseholdBase(BaseModel):
@@ -14,6 +14,7 @@ class HouseholdBase(BaseModel):
     building_condition: str = "good"
     emergency_contact: Optional[str] = None
     emergency_phone: Optional[str] = None
+    extra_data: Optional[Dict[str, Any]] = None  # RENAMED from metadata
 
 class HouseholdCreate(HouseholdBase):
     pass
@@ -25,12 +26,14 @@ class HouseholdUpdate(BaseModel):
     disabled: Optional[int] = None
     medical_dependency: Optional[bool] = None
     building_condition: Optional[str] = None
+    extra_data: Optional[Dict[str, Any]] = None  # RENAMED from metadata
 
 class HouseholdResponse(HouseholdBase):
     id: int
     vulnerability_score: float
     zone_id: Optional[int]
     created_at: datetime
+    updated_at: datetime
     
     class Config:
         from_attributes = True

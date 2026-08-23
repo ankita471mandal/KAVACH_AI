@@ -28,5 +28,5 @@ class Household(BaseModel):
     emergency_contact = Column(String, nullable=True)
     emergency_phone = Column(String, nullable=True)
     
-    # Additional data
-    metadata = Column(JSON, nullable=True)
+    # Additional data - RENAMED from 'metadata' to 'extra_data'
+    extra_data = Column(JSON, nullable=True)
