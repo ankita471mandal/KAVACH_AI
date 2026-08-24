@@ -1,0 +1,42 @@
+[
+  {
+    "zone_id": "Z01",
+    "rainfall": 40,
+    "river_level": 2,
+    "elevation": 300,
+    "historical_risk": 20,
+    "drainage": 30,
+    "trend": 2,
+    "previous_risk_score": 18
+  },
+  {
+    "zone_id": "Z02",
+    "rainfall": 90,
+    "river_level": 4,
+    "elevation": 150,
+    "historical_risk": 45,
+    "drainage": 55,
+    "trend": 8,
+    "previous_risk_score": 38
+  },
+  {
+    "zone_id": "Z04",
+    "rainfall": 20,
+    "river_level": 1,
+    "elevation": 400,
+    "historical_risk": 10,
+    "drainage": 15,
+    "trend": -3,
+    "previous_risk_score": 15
+  },
+  {
+    "zone_id": "Z17",
+    "rainfall": 150,
+    "river_level": 6.5,
+    "elevation": 40,
+    "historical_risk": 60,
+    "drainage": 75,
+    "trend": 18,
+    "previous_risk_score": 52
+  }
+]
