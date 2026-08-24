@@ -1,49 +1,15 @@
-import axios from 'axios';
+const API_BASE_URL = "http://127.0.0.1:8000";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  }
-});
-
-// Error interceptor
-api.interceptors.response.use(
-  response => response,
-  error => {
-    console.error('API Error:', error.response?.data || error.message);
-    return Promise.reject(error);
-  }
-);
-
-export const ApiService = {
-  // Health & Stats
-  getHealth: () => api.get('/health'),
-  getStats: () => api.get('/stats'),
-
-  // Zones
-  getZones: () => api.get('/api/v1/zones/'),
-  getPriorityZones: () => api.get('/api/v1/zones/priority/list'),
-
-  // Hospitals
-  getHospitals: () => api.get('/api/v1/hospitals/'),
-
-  // Shelters
-  getShelters: () => api.get('/api/v1/shelters/'),
-  getShelterCapacity: (shelterId) => api.get(`/api/v1/shelters/${shelterId}/capacity`),
-
-  // SOS
-  createSOS: (data) => api.post('/api/v1/sos/', data),
-  getSOSRequests: (status) => api.get(`/api/v1/sos/${status ? `?status=${status}` : ''}`),
-
-  // Rescue
-  submitRescueReport: (data) => api.post('/api/v1/rescue/report', data),
-
-  // Roads
-  getRoads: () => api.get('/api/v1/roads/'),
+// Example of how your fetch calls should look:
+export const api = {
+  health: () => fetch(`${API_BASE_URL}/health`).then(res => res.json()),
+  zones: () => fetch(`${API_BASE_URL}/zones`).then(res => res.json()),
+  risk: (zoneId) => fetch(`${API_BASE_URL}/risk/${zoneId}`).then(res => res.json()),
+  vulnerability: (id) => fetch(`${API_BASE_URL}/households/${id}/vulnerability`).then(res => res.json()),
+  priorityAreas: () => fetch(`${API_BASE_URL}/priority-areas`).then(res => res.json()),
+  simulate: () => fetch(`${API_BASE_URL}/simulate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scenario: "heavy_rain", zone_id: "Z17" })
+  }).then(res => res.json()),
 };
-
-export default ApiService;
