@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-base-bg text-base-text font-body antialiased;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #25314A; border-radius: 8px; }
+
+.leaflet-container {
+  background: #0B1220 !important;
+  font-family: 'Inter', sans-serif;
+}
+.leaflet-popup-content-wrapper {
+  background: #121A2B;
+  color: #E7ECF5;
+  border: 1px solid #25314A;
+  border-radius: 10px;
+}
+.leaflet-popup-tip {
+  background: #121A2B;
+}
+.leaflet-control-zoom a {
+  background: #121A2B !important;
+  color: #E7ECF5 !important;
+  border-color: #25314A !important;
+}

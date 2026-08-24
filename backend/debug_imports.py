@@ -39,7 +39,7 @@ except Exception as e:
 
 try:
     print("5. Testing app.main...")
-    from app.main import app
+    from backend.main import app
     print("   ✅ Success\n")
 except Exception as e:
     print(f"   ❌ Error: {e}\n")
