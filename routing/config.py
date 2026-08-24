@@ -1,0 +1,10 @@
+RISK_API_BASE_URL = "http://127.0.0.1:8000"
+
+RISK_SCORE_THRESHOLD = 70
+
+RISK_LEVELS = {
+    "LOW": 0,
+    "MODERATE": 31,
+    "HIGH": 51,
+    "CRITICAL": 71,
+}
