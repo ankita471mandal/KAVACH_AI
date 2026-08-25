@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "team_id": "RT01",
+        "team_name": "Alpha Rescue",
+        "members": 8,
+        "status": "DEPLOYED",
+        "mission": "Household evacuation"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3600, 22.5680]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "team_id": "RT02",
+        "team_name": "Bravo Rescue",
+        "members": 6,
+        "status": "AVAILABLE",
+        "mission": "Standby"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3790, 22.5800]
+      }
+    }
+  ]
+}

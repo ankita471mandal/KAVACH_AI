@@ -1,0 +1,24 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "route_id": "ROUTE01",
+        "distance_km": 3.2,
+        "estimated_minutes": 24,
+        "safety_score": 92,
+        "status": "ACTIVE"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [88.3630, 22.5740],
+          [88.3650, 22.5760],
+          [88.3700, 22.5780],
+          [88.3775, 22.5790]
+        ]
+      }
+    }
+  ]
+}
